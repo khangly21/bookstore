@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "node:path"; //để fallback dùng path, Nếu project TypeScript của bạn dùng Node ESM (xem type:'module' trong package.json), cách này an toàn hơn import path from "path";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -34,6 +35,7 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
+  app.use(express.static("dist/public"));
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
@@ -97,6 +99,9 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve("dist/public/index.html"));
+  });//Express 4 → app.get("*") vẫn phù hợp. Với Express 4, syntax wildcard này là cách thông dụng
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
